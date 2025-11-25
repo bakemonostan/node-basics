@@ -3,39 +3,25 @@ import express from "express";
 import { errorHandler } from "./middleware/error.middleware.js";
 import { getHealth, getRoot } from "./controllers/auth.controller.js";
 import authRoutes from "./routes/auth.route.js";
+import { sessionMiddleware } from "./middleware/session.middleware.js";
 
-// Swagger setup
-import swaggerJsdoc from "swagger-jsdoc";
+// OpenAPI setup
 import swaggerUi from "swagger-ui-express";
+import { generateOpenAPISpec } from "./config/openapi.config.js";
+import { registerAllRoutes } from "./config/routes/index.js";
 
-const options: swaggerJsdoc.Options = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Auth API",
-      version: "1.0.0",
-      description: "Basic auth API with Express, Zod, and Prisma",
-    },
-    servers: [
-      {
-        url: "http://localhost:3000",
-        description: "Local development server",
-      },
-    ],
-  },
-  apis: ["./src/routes/*.ts"], // paths to files with JSDoc
-};
-
-const specs = swaggerJsdoc(options);
+// Register routes and generate OpenAPI specification
+registerAllRoutes();
+const openapiSpec = generateOpenAPISpec();
 
 export const createApp = () => {
   const app = express();
 
   app.use(express.json());
-
+  app.use(sessionMiddleware);
   // Swagger UI
-  app.use("/docs", swaggerUi.serve, swaggerUi.setup(specs));
-  app.use("/docs-json", (_req, res) => res.json(specs));
+  app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiSpec));
+  app.use("/docs-json", (_req, res) => res.json(openapiSpec));
 
   // Routes
   app.get("/", getRoot);

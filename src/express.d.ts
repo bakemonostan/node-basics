@@ -1,5 +1,6 @@
 // src/types/express.d.ts
 
+import type { Request } from "express";
 import { z, ZodTypeAny } from "zod";
 
 // Infer the type from a Zod schema
